@@ -12,6 +12,10 @@ public class Post {
     public Post() {
     }
 
+    public Post(Long id) {
+        this.id = id;
+    }
+
     public Post(String content, Writer writer) {
         this.content = content;
         this.writer = writer;

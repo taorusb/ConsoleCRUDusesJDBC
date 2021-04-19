@@ -76,12 +76,7 @@ public class Facade {
         regionRepository = RegionRepositoryImpl.getInstance();
 
         writerRepository.setConnectionSupplier(connectionSupplier);
-        writerRepository.setPostRepository(postRepository);
-        writerRepository.setRegionRepository(regionRepository);
-
-
         postRepository.setConnectionSupplier(connectionSupplier);
-
         regionRepository.setConnectionSupplier(connectionSupplier);
 
         writerService = new WriterServiceImpl();

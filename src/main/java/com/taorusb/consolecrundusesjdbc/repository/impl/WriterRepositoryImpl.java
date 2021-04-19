@@ -16,8 +16,6 @@ import java.util.function.Supplier;
 
 public class WriterRepositoryImpl implements WriterRepository {
 
-    private PostRepository postRepository;
-    private RegionRepository regionRepository;
     private Supplier<Connection> connectionSupplier;
     private PreparedStatement preparedStatement;
     private ResultSet resultSet;
@@ -28,20 +26,10 @@ public class WriterRepositoryImpl implements WriterRepository {
 
     public static WriterRepositoryImpl getInstance() {
 
-        if(instance == null) {
+        if (instance == null) {
             instance = new WriterRepositoryImpl();
         }
         return instance;
-    }
-
-
-
-    public void setPostRepository(PostRepository postRepository) {
-        this.postRepository = postRepository;
-    }
-
-    public void setRegionRepository(RegionRepository regionRepository) {
-        this.regionRepository = regionRepository;
     }
 
     public void setConnectionSupplier(Supplier<Connection> connectionSupplier) {
@@ -56,14 +44,15 @@ public class WriterRepositoryImpl implements WriterRepository {
 
         try {
             preparedStatement = connection
-                    .prepareStatement("select * from writers where id = ?"
+                    .prepareStatement("select * from writers w left join posts p on w.id = p.writer_id join regions r on w.region_id = r.id where w.id = ?"
                             , ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
             preparedStatement.setInt(1, id.intValue());
             resultSet = preparedStatement.executeQuery();
 
-            if (getResultSize() != 1) {
+            if (getResultSize() == 0) {
                 throw new NoSuchElementException("Entity not found.");
             }
+
             resultSet.next();
             writer = getWriterFromRow();
 
@@ -122,7 +111,7 @@ public class WriterRepositoryImpl implements WriterRepository {
         List<Writer> writers = new LinkedList<>();
 
         try {
-            preparedStatement = connection.prepareStatement("select * from writers");
+            preparedStatement = connection.prepareStatement("select * from writers w left join posts p on w.id = p.writer_id join regions r on w.region_id = r.id  order by w.id");
             resultSet = preparedStatement.executeQuery();
 
             while (resultSet.next()) {
@@ -188,8 +177,8 @@ public class WriterRepositoryImpl implements WriterRepository {
                     "update writers set first_name = ?, last_name = ?, region_id = ? where id = ?");
             preparedStatement.setString(1, entity.getFirstName());
             preparedStatement.setString(2, entity.getLastName());
-            preparedStatement.setInt(3, entity.getRegion().getId().intValue());
-            preparedStatement.setInt(4, entity.getId().intValue());
+            preparedStatement.setLong(3, entity.getRegion().getId());
+            preparedStatement.setLong(4, entity.getId());
 
             int result = preparedStatement.executeUpdate();
             if (result == 0) {
@@ -228,35 +217,58 @@ public class WriterRepositoryImpl implements WriterRepository {
 
     private Writer getWriterFromRow() {
 
-        Writer writer;
-        long id = 0;
-        String firstName = null;
-        String lastName = null;
-        String role = null;
-        List<Post> posts;
+        Writer writer = new Writer();
+        long writerId;
+        String firstName;
+        String lastName;
+        String role;
+
         Region region;
-        long regionId = 0;
+        long regionId;
+        String regionName;
+
+        Post post;
+        List<Post> posts = new LinkedList<>();
+        long postId;
+        String content;
+        String created;
+        String updated;
 
         try {
-            id = resultSet.getLong("id");
+            regionId = resultSet.getLong("region_id");
+            regionName = resultSet.getString("name");
+            region = new Region(regionId, regionName);
+
+            writerId = resultSet.getLong("w.id");
             firstName = resultSet.getString("first_name");
             lastName = resultSet.getString("last_name");
             role = resultSet.getString("role");
-            regionId = resultSet.getLong("region_id");
+            writer = new Writer(writerId, firstName, lastName, region);
+            writer.setRole(Role.valueOf(role));
+
+            if (resultSet.getLong("p.id") > 0) {
+                postId = resultSet.getLong("p.id");
+                content = resultSet.getString("content");
+                created = resultSet.getString("created");
+                updated = resultSet.getString("updated");
+                post = new Post(postId, content, created, updated, writer);
+                posts.add(post);
+
+                while (resultSet.next() && resultSet.getLong("w.id") == writerId) {
+                    postId = resultSet.getLong("p.id");
+                    content = resultSet.getString("content");
+                    created = resultSet.getString("created");
+                    updated = resultSet.getString("updated");
+                    post = new Post(postId, content, created, updated, writer);
+                    posts.add(post);
+                }
+                resultSet.previous();
+            }
+
+            writer.setPosts(posts);
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-
-        region = regionRepository.getById(regionId);
-
-        writer = new Writer(id, firstName, lastName, region);
-        try {
-            posts = postRepository.getByWriterId(id);
-        } catch (NoSuchElementException e) {
-            posts = new LinkedList<>();
-        }
-        writer.setPosts(posts);
-        writer.setRole(Role.valueOf(role));
 
         return writer;
     }

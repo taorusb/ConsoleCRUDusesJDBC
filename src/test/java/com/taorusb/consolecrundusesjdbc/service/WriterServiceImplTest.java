@@ -3,8 +3,6 @@ package com.taorusb.consolecrundusesjdbc.service;
 import com.taorusb.consolecrundusesjdbc.model.Region;
 import com.taorusb.consolecrundusesjdbc.model.Role;
 import com.taorusb.consolecrundusesjdbc.model.Writer;
-import com.taorusb.consolecrundusesjdbc.repository.impl.PostRepositoryImpl;
-import com.taorusb.consolecrundusesjdbc.repository.impl.RegionRepositoryImpl;
 import com.taorusb.consolecrundusesjdbc.repository.impl.WriterRepositoryImpl;
 import org.junit.Before;
 import org.junit.Test;
@@ -13,7 +11,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
@@ -24,8 +21,6 @@ public class WriterServiceImplTest {
 
     WriterServiceImpl writerService = new WriterServiceImpl();
     WriterRepositoryImpl writerRepository = WriterRepositoryImpl.getInstance();
-    PostRepositoryImpl postRepository = mock(PostRepositoryImpl.class);
-    RegionRepositoryImpl regionRepository = mock(RegionRepositoryImpl.class);
     Supplier<Connection> connectionSupplier = mock(Supplier.class);
     Connection connection = mock(Connection.class);
     PreparedStatement preparedStatement = mock(PreparedStatement.class);
@@ -34,8 +29,6 @@ public class WriterServiceImplTest {
     @Before
     public void setUp() throws Exception {
         writerRepository.setConnectionSupplier(connectionSupplier);
-        writerRepository.setPostRepository(postRepository);
-        writerRepository.setRegionRepository(regionRepository);
 
         when(connectionSupplier.get()).thenReturn(connection);
 
@@ -47,16 +40,19 @@ public class WriterServiceImplTest {
 
         when(connection.prepareStatement(any(), anyInt(), anyInt())).thenReturn(preparedStatement);
         when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        setRsActionForGetById();
 
         when(resultSet.getRow()).thenReturn(0);
         assertThrows(NoSuchElementException.class, () -> writerService.getById(1L));
 
         when(resultSet.getRow()).thenReturn(1);
+        setRsActionForGetById();
         Writer writer = new Writer(1L,"Ivan", "Ivanov", new Region(1L));
         writer.setRole(Role.USER);
 
-        assertEquals(writer, writerService.getById(1L));
+        Writer fromRepo = writerService.getById(1L);
+
+        assertEquals(writer, fromRepo);
+        assertEquals(4, fromRepo.getPosts().size());
     }
 
     @Test
@@ -104,17 +100,23 @@ public class WriterServiceImplTest {
     }
 
     private void setRsActionForGetById() throws SQLException {
-        when(resultSet.getLong("id")).thenReturn(1L);
+
+        when(resultSet.getLong("p.id")).thenReturn(1L);
+        when(resultSet.next()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
+
+        when(resultSet.getLong("region_id")).thenReturn(1L);
+
+        when(resultSet.getLong("w.id")).thenReturn(1L);
         when(resultSet.getString("first_name")).thenReturn("Ivan");
         when(resultSet.getString("last_name")).thenReturn("Ivanov");
         when(resultSet.getString("role")).thenReturn("USER");
-        when(postRepository.getByWriterId(any())).thenReturn(new LinkedList<>());
-        when(regionRepository.getById(any())).thenReturn(new Region(1L));
+
     }
 
     private void setRsActionForFindAll() throws SQLException {
         when(resultSet.next()).thenReturn(true).thenReturn(true).thenReturn(true).thenReturn(false);
-        when(resultSet.getLong(any())).thenReturn(1L).thenReturn(1L).thenReturn(1L);
+        when(resultSet.getLong("w.id")).thenReturn(1L);
         when(resultSet.getString("role")).thenReturn("USER");
+        when(resultSet.getLong("p.id")).thenReturn(0L);
     }
 }

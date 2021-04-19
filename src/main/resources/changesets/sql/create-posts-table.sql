@@ -9,4 +9,5 @@ create table posts
     primary key (id),
     foreign key (writer_id)
         references writers (id)
+        on delete cascade
 );
