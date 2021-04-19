@@ -6,8 +6,6 @@ import com.taorusb.consolecrundusesjdbc.service.RegionService;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import static com.taorusb.consolecrundusesjdbc.controller.Validator.*;
-
 public class RegionController {
 
     private RegionService regionService;
@@ -20,33 +18,37 @@ public class RegionController {
         return regionService.getAllRegions();
     }
 
-    public String addNewRegion(Region region) {
+    public Region addNewRegion (ResponseStatus responseStatus, String name) {
 
+        Region region = null;
         try {
-            regionService.saveRegion(region);
+            region = regionService.saveRegion(new Region(name));
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return successful;
+        return region;
     }
 
-    public String updateRegion(Region region) {
+    public Region updateRegion(ResponseStatus responseStatus, long id, String name) {
 
+        Region region = null;
         try {
-            regionService.updateRegion(region);
+            region = regionService.updateRegion(new Region(id, name));
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return successful;
+        return region;
     }
 
-    public String deleteRegion(long id) {
+    public void deleteRegion(ResponseStatus responseStatus, long id) {
 
         try {
             regionService.deleteRegion(id);
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return successful;
     }
 }

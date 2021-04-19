@@ -1,6 +1,7 @@
 package com.taorusb.consolecrundusesjdbc.view;
 
 import com.taorusb.consolecrundusesjdbc.controller.RegionController;
+import com.taorusb.consolecrundusesjdbc.controller.ResponseStatus;
 import com.taorusb.consolecrundusesjdbc.model.Region;
 
 import java.util.List;
@@ -10,12 +11,14 @@ import static java.lang.Long.parseLong;
 
 public class ShowRegion {
 
+    private ResponseStatus responseStatus;
     private RegionController regionController;
     private static final String[] template = {"%-8s%-22s%n", "id", "name"};
     private List<Region> regionList;
     private Region container = new Region();
 
-    public ShowRegion(RegionController regionController) {
+    public ShowRegion(RegionController regionController, ResponseStatus responseStatus) {
+        this.responseStatus = responseStatus;
         this.regionController = regionController;
     }
 
@@ -31,12 +34,11 @@ public class ShowRegion {
 
     public void addRegion(String name) {
 
-        String result;
         if (checkString(name)) {
 
-            result = regionController.addNewRegion(new Region(name));
+            regionController.addNewRegion(responseStatus, name);
 
-            if (result.equals(elementNotFoundError)) {
+            if (responseStatus.getStatus().equals("elementNotFound")) {
                 System.out.println(elementNotFoundError);
                 return;
             }
@@ -46,13 +48,11 @@ public class ShowRegion {
 
     public void updateRegion(String id, String name) {
 
-        String result;
         if (checkFields(id, name)) {
 
-            container = new Region(parseLong(id), name);
-            result = regionController.updateRegion(container);
+            regionController.updateRegion(responseStatus, parseLong(id), name);
 
-            if (result.equals(elementNotFoundError)) {
+            if (responseStatus.getStatus().equals("elementNotFound")) {
                 System.out.println(elementNotFoundError);
                 return;
             }
@@ -62,15 +62,14 @@ public class ShowRegion {
 
     public void deleteRegion(String id) {
 
-        String result;
         if (!checkId(id)) {
             System.out.println(idError);
             return;
         }
 
-        result = regionController.deleteRegion(parseLong(id));
+        regionController.deleteRegion(responseStatus, parseLong(id));
 
-        if (result.equals(elementNotFoundError)) {
+        if (responseStatus.getStatus().equals("elementNotFound")) {
             System.out.println(elementNotFoundError);
             return;
         }

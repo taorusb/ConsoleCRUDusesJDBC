@@ -205,46 +205,6 @@ public class PostRepositoryImpl implements PostRepository {
         return entity;
     }
 
-    @Override
-    public List<Post> getByWriterId(Long id) {
-
-        Connection connection = connectionSupplier.get();
-        List<Post> posts = new LinkedList<>();
-
-        try {
-            preparedStatement = connection.prepareStatement("select * from posts where writer_id = ?",
-                    ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-            preparedStatement.setInt(1, id.intValue());
-            resultSet = preparedStatement.executeQuery();
-
-            if (getResultSize() == 0) {
-                throw new NoSuchElementException("Entity not found.");
-            }
-
-            while (resultSet.next()) {
-                posts.add(getPostFromRow());
-            }
-
-            resultSet.close();
-            preparedStatement.close();
-            connection.close();
-
-            return posts;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.close();
-                }
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
-        }
-
-        return posts;
-    }
-
     private int getResultSize() {
 
         int size;

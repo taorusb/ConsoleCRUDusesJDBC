@@ -3,6 +3,7 @@ package com.taorusb.consolecrundusesjdbc;
 import com.taorusb.consolecrundusesjdbc.commandhandler.commands.*;
 import com.taorusb.consolecrundusesjdbc.controller.PostController;
 import com.taorusb.consolecrundusesjdbc.controller.RegionController;
+import com.taorusb.consolecrundusesjdbc.controller.ResponseStatus;
 import com.taorusb.consolecrundusesjdbc.controller.WriterController;
 import com.taorusb.consolecrundusesjdbc.repository.impl.PostRepositoryImpl;
 import com.taorusb.consolecrundusesjdbc.repository.impl.RegionRepositoryImpl;
@@ -43,6 +44,8 @@ public class Facade {
     private ShowWriter showWriter;
     private ShowPost showPost;
     private ShowRegion showRegion;
+
+    private ResponseStatus responseStatus;
 
     private static Facade instance;
 
@@ -92,6 +95,8 @@ public class Facade {
 
     private void assembleControllers() {
 
+        responseStatus = new ResponseStatus();
+
         writerController = new WriterController();
         postController = new PostController();
         regionController = new RegionController();
@@ -106,9 +111,9 @@ public class Facade {
     }
 
     private void assembleView() {
-        showWriter = new ShowWriter(writerController);
-        showPost = new ShowPost(postController);
-        showRegion = new ShowRegion(regionController);
+        showWriter = new ShowWriter(writerController, responseStatus);
+        showPost = new ShowPost(postController, responseStatus);
+        showRegion = new ShowRegion(regionController, responseStatus);
 
         assembleChain();
     }

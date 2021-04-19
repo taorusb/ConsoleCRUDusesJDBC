@@ -3,8 +3,6 @@ package com.taorusb.consolecrundusesjdbc.service;
 import com.taorusb.consolecrundusesjdbc.model.Post;
 import com.taorusb.consolecrundusesjdbc.repository.PostRepository;
 
-import java.util.List;
-
 public class PostServiceImpl implements PostService {
 
     private PostRepository postRepository;
@@ -33,8 +31,4 @@ public class PostServiceImpl implements PostService {
         postRepository.deleteById(id);
     }
 
-    @Override
-    public List<Post> getByWriterId(Long id) {
-        return postRepository.getByWriterId(id);
-    }
 }

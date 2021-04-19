@@ -85,20 +85,6 @@ public class PostServiceImplTest {
         assertThrows(NoSuchElementException.class, () -> postService.deletePost(1L));
     }
 
-    @Test
-    public void getByWriterId() throws SQLException {
-
-        when(connection.prepareStatement(any(), anyInt(), anyInt())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-
-        when(resultSet.getRow()).thenReturn(0);
-        assertThrows(NoSuchElementException.class, () -> postService.getByWriterId(1L));
-
-        when(resultSet.getRow()).thenReturn(1);
-        setRsActionForFindAll();
-        assertEquals(3, postService.getByWriterId(1L).size());
-    }
-
     private void setRsActionForGetById() throws SQLException {
         when(resultSet.getLong("id")).thenReturn(1L);
         when(resultSet.getString("content")).thenReturn("Some-content");

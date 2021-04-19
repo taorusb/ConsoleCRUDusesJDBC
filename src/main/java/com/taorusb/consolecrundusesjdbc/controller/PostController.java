@@ -5,10 +5,9 @@ import com.taorusb.consolecrundusesjdbc.model.Writer;
 import com.taorusb.consolecrundusesjdbc.service.PostService;
 import com.taorusb.consolecrundusesjdbc.service.WriterService;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
-
-import static com.taorusb.consolecrundusesjdbc.controller.Validator.*;
 
 public class PostController {
 
@@ -23,49 +22,50 @@ public class PostController {
         this.writerService = writerService;
     }
 
-    public String showByWriterId(long id, List<Post> postList) {
+    public List<Post> showByWriterId(ResponseStatus responseStatus, long id) {
 
+        List<Post> posts = new LinkedList<>();
         try {
-            postList.addAll(postService.getByWriterId(id));
+            posts.addAll(writerService.getById(id).getPosts());
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return allRight;
+        return posts;
     }
 
-    public String addNewPost(long writerId, String content) {
+    public Post addNewPost(ResponseStatus responseStatus, long writerId, String content) {
 
+        Post post = null;
         try {
             Writer writer = writerService.getById(writerId);
-            writer.addPost(postService.savePost(new Post(content, new Writer(writerId))));
+            post = postService.savePost(new Post(content, new Writer(writerId)));
+            writer.addPost(post);
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return successful;
+        return post;
     }
 
-    public String updatePost(long id, String content, Post post) {
+    public Post updatePost(ResponseStatus responseStatus, long id, String content) {
 
-        Post temp;
+        Post post = null;
         try {
-            temp = postService.updatePost(new Post(id, content));
-            post.setId(temp.getId());
-            post.setUpdated(temp.getUpdated());
-            post.setCreated(temp.getCreated());
-            post.setContent(temp.getContent());
-            post.setWriter(temp.getWriter());
+            post = postService.updatePost(new Post(id, content));
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return successful;
+        return post;
     }
 
-    public String deletePost(long id) {
+    public void deletePost(ResponseStatus responseStatus, long id) {
         try {
             postService.deletePost(id);
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return successful;
     }
 }

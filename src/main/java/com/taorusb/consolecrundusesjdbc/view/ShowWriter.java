@@ -1,5 +1,6 @@
 package com.taorusb.consolecrundusesjdbc.view;
 
+import com.taorusb.consolecrundusesjdbc.controller.ResponseStatus;
 import com.taorusb.consolecrundusesjdbc.controller.WriterController;
 import com.taorusb.consolecrundusesjdbc.model.Writer;
 
@@ -12,9 +13,11 @@ public class ShowWriter {
 
     private static final String[] template = {"%-8s%-16s%-16s%-16s%-16s%-8s%n", "id", "firstName", "lastName", "regionId", "postCount", "role"};
     private WriterController writerController;
+    private ResponseStatus responseStatus;
     private List<Writer> container;
 
-    public ShowWriter(WriterController writerController) {
+    public ShowWriter(WriterController writerController, ResponseStatus responseStatus) {
+        this.responseStatus = responseStatus;
         this.writerController = writerController;
     }
 
@@ -26,12 +29,11 @@ public class ShowWriter {
 
     public void addWriter(String firstName, String lastName, String regionId) {
 
-        String result;
         if (checkFields(firstName, lastName) || checkId(regionId)) {
 
-            result = writerController.addNewWriter(firstName, lastName, parseLong(regionId));
+            writerController.addNewWriter(responseStatus, firstName, lastName, parseLong(regionId));
 
-            if (result.equals(elementNotFoundError)) {
+            if (responseStatus.getStatus().equals("elementNotFound")) {
                 System.out.println(elementNotFoundError);
                 return;
             }
@@ -42,12 +44,11 @@ public class ShowWriter {
 
     public void updateWriter(String id, String firstName, String lastName, String regionId) {
 
-        String result;
         if (checkId(id) || checkId(regionId) || checkFields(firstName, lastName)) {
 
-            result = writerController.updateWriter(parseLong(id), firstName, lastName, parseLong(regionId));
+            writerController.updateWriter(responseStatus, parseLong(id), firstName, lastName, parseLong(regionId));
 
-            if (result.equals(elementNotFoundError)) {
+            if (responseStatus.getStatus().equals("elementNotFound")) {
                 System.out.println(elementNotFoundError);
                 return;
             }
@@ -58,15 +59,14 @@ public class ShowWriter {
 
     public void deleteWriter(String id) {
 
-        String result;
         if (!checkId(id)) {
             System.out.println(idError);
             return;
         }
 
-        result = writerController.deleteWriter(parseLong(id));
+        writerController.deleteWriter(responseStatus, parseLong(id));
 
-        if (result.equals(elementNotFoundError)) {
+        if (responseStatus.getStatus().equals("elementNotFound")) {
             System.out.println(elementNotFoundError);
             return;
         }

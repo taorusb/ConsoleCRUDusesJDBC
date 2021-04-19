@@ -1,6 +1,7 @@
 package com.taorusb.consolecrundusesjdbc.view;
 
 import com.taorusb.consolecrundusesjdbc.controller.PostController;
+import com.taorusb.consolecrundusesjdbc.controller.ResponseStatus;
 import com.taorusb.consolecrundusesjdbc.model.Post;
 
 import java.util.LinkedList;
@@ -11,25 +12,26 @@ import static java.lang.Long.parseLong;
 
 public class ShowPost {
 
+    private ResponseStatus responseStatus;
     private PostController postController;
     private static final String[] template = {"%-8s%-26.20s%-12s%-12s%-12s%n", "id", "content", "created", "updated", "writerId"};
     private List<Post> container = new LinkedList<>();
 
-    public ShowPost(PostController postController) {
+    public ShowPost(PostController postController, ResponseStatus responseStatus) {
+        this.responseStatus = responseStatus;
         this.postController = postController;
     }
 
     public void showByWriterId(String id) {
 
-        String result;
         if (!checkId(id)) {
             System.out.println(idError);
             return;
         }
 
-        result = postController.showByWriterId(parseLong(id), container);
+        container.addAll(postController.showByWriterId(responseStatus, parseLong(id)));
 
-        if (result.equals(elementNotFoundError)) {
+        if (responseStatus.getStatus().equals("elementNotFound")) {
             System.out.println(elementNotFoundError);
             return;
         }
@@ -39,15 +41,14 @@ public class ShowPost {
 
     public void addPost(String writerId, String content) {
 
-        String result;
         if (!checkId(writerId)) {
             System.out.println(idError);
             return;
         }
 
-        result = postController.addNewPost(parseLong(writerId), content);
+        postController.addNewPost(responseStatus, parseLong(writerId), content);
 
-        if (result.equals(elementNotFoundError)) {
+        if (responseStatus.getStatus().equals("elementNotFound")) {
             System.out.println(elementNotFoundError);
             return;
         }
@@ -56,17 +57,15 @@ public class ShowPost {
 
     public void updatePost(String id, String content) {
 
-        String result;
-        Post post = new Post();
-
+        Post post;
         if (!checkId(id)) {
             System.out.println(idError);
             return;
         }
 
-        result = postController.updatePost(parseLong(id), content, post);
+        post = postController.updatePost(responseStatus, parseLong(id), content);
 
-        if (result.equals(elementNotFoundError)) {
+        if (responseStatus.getStatus().equals("elementNotFound")) {
             System.out.println(elementNotFoundError);
             return;
         }
@@ -82,7 +81,14 @@ public class ShowPost {
             System.out.println(idError);
             return;
         }
-        System.out.println(postController.deletePost(parseLong(id)));
+
+        postController.deletePost(responseStatus, parseLong(id));
+
+        if (responseStatus.getStatus().equals("elementNotFound")) {
+            System.out.println(elementNotFoundError);
+            return;
+        }
+        System.out.println(successful);
     }
 
     private void printPosts() {

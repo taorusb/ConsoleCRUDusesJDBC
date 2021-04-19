@@ -8,8 +8,6 @@ import com.taorusb.consolecrundusesjdbc.service.WriterService;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-import static com.taorusb.consolecrundusesjdbc.controller.Validator.*;
-
 public class WriterController {
 
     private WriterService writerService;
@@ -27,35 +25,40 @@ public class WriterController {
         return writerService.getAllWriters();
     }
 
-    public String addNewWriter(String firstName, String lastName, long regionId) {
+    public Writer addNewWriter(ResponseStatus responseStatus, String firstName, String lastName, long regionId) {
+
+        Writer writer = null;
         try {
             Region region = regionService.getById(regionId);
-            writerService.saveWriter(new Writer(firstName, lastName, region));
+            writer = writerService.saveWriter(new Writer(firstName, lastName, region));
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
 
-        return successful;
+        return writer;
     }
 
-    public String updateWriter(long id, String firstName, String lastName, long regionId) {
+    public Writer updateWriter(ResponseStatus responseStatus,long id, String firstName, String lastName, long regionId) {
 
+        Writer writer = null;
         try {
             Region region = regionService.getById(regionId);
-            writerService.updateWriter(new Writer(id, firstName, lastName, region));
+            writer = writerService.updateWriter(new Writer(id, firstName, lastName, region));
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return successful;
+        return writer;
     }
 
-    public String deleteWriter(long id) {
+    public void deleteWriter(ResponseStatus responseStatus, long id) {
 
         try {
             writerService.deleteWriter(id);
+            responseStatus.setSuccessful();
         } catch (NoSuchElementException e) {
-            return elementNotFoundError;
+            responseStatus.setElementNotFoundStatus();
         }
-        return successful;
     }
 }
