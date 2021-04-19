@@ -9,4 +9,5 @@ create table writers
     primary key (id),
     foreign key (region_id)
         references regions (id)
+        on delete cascade
 );
